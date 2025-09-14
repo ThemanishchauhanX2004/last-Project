@@ -1,0 +1,1 @@
+export let Product_added = "product-added"
