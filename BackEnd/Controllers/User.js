@@ -2,6 +2,8 @@ import User from "../Model/UserModel.js";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import jwt from "jsonwebtoken"
+import fs from "fs"
+import cloudinary from "../config/Cloudinary.js"
 
 export async function signup(req, res) {
   try {
@@ -18,6 +20,16 @@ export async function signup(req, res) {
         message:
           "Password must include uppercase, lowercase, number & special character",
       });
+    }
+    let pictureUrl = "";
+    if(req.file){
+      let result = await cloudinary.uploader.upload(req.file.path,{
+        folder : "uploads"
+      })
+      pictureUrl = result.secure_url;
+      fs.unlink(req.file.path ,(err)=>{
+        console.log(err);
+      })
     }
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
