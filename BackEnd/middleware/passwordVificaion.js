@@ -11,8 +11,6 @@ export default async function password(req, res, next) {
                 isAdmin: true
             })
         }
-
-
         return res.status(202).json({
             message:"admin loggedin",
             isAdmin:true

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Profile.css";
 import { MdCameraEnhance } from "react-icons/md";
-
+import { Navigate } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 function Profile() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -46,7 +46,6 @@ function Profile() {
     }
     const res = await fetch("http://localhost:3000/user/signup", {
       method: "POST",
-     
       credentials: "include",
       body: formData,
     });
@@ -76,6 +75,10 @@ function Profile() {
   };
 
   const handleLogin = async () => {
+    if(lockTime && Date.now() -lockTime <2 * 60 * 1000){
+      alert("Too many failed attempts. Please try again after 2 minutes.")
+      return;
+    }
     const res = await fetch("http://localhost:3000/user/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -86,7 +89,22 @@ function Profile() {
 
     if (res.ok) {
       setIsLoggedIn(true);
-      setLoggedInUser(data.user);
+      steAttempts(0);
+      if(data.isAdmin){
+        Navigate("/admin")
+        return;
+      }
+     
+      let profileData = await profileData.json();
+      setLoggedInUser(profileData.user)
+    }else{
+      steAttempts(prev => prev +1)
+      if(attempts+1 >=3){
+        setLockTime(Date.now());
+        alert("Too many failed attempts! Try again in 2 minutes");
+        return;
+      }
+      alert(data.error || "login failed")
     }
   };
 
