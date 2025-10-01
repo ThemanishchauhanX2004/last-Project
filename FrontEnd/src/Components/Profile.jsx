@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import "./Profile.css";
+import "./Profile.css"
 import { MdCameraEnhance } from "react-icons/md";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 function Profile() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -9,8 +9,10 @@ function Profile() {
   const [form, setForm] = useState({ firstName: "", lastName: "", userName: "", password: "" , picture:""});
   const [loading, setLoading] = useState(false);
   const [showSignup, setShowSignup] = useState(true);
+const navigate = useNavigate();
 
-
+const [attempts, setAttempts] = useState(0);
+const [lockTime, setLockTime] = useState(null);
   const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -44,25 +46,31 @@ function Profile() {
     if (form.picture) {
       formData.append("picture", form.picture); // file append
     }
-    const res = await fetch("http://localhost:3000/user/signup", {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
-
-    if (res.status === 201) {
-      let data = await res.json();
-      alert(data.message);
-
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        setShowSignup(false);
-      }, 2000);
-    } else {
-      let data = await res.json();
-      console.log(data);
-    }
+  try {
+      const res = await fetch("http://localhost:3000/user/signup", {
+        method: "POST",
+       
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json(); 
+      if (res.status === 201) {
+  
+  
+        setLoading(true);
+        setTimeout(() => {
+          setLoading(false);
+          setShowSignup(false);
+                alert(data.message || "Signup successful!");
+        }, 2000);
+      } else {
+        
+    alert(data.error || data.message || "signup failed")
+      }
+  } catch (error) {
+        console.error(error);
+    alert("Something went wrong. Please check your connection.");
+  }
   };
 
   const validatePassword = (value) => {
@@ -75,36 +83,43 @@ function Profile() {
   };
 
   const handleLogin = async () => {
-    if(lockTime && Date.now() -lockTime <2 * 60 * 1000){
-      alert("Too many failed attempts. Please try again after 2 minutes.")
-      return;
-    }
+     if (lockTime && Date.now() - lockTime < 2 * 60 * 1000) {
+    alert("Too many failed attempts. Please try again after 2 minutes.");
+    return;
+  }
     const res = await fetch("http://localhost:3000/user/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ userName: form.userName, password: form.password }),
-    });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include",
+  body: JSON.stringify({ userName: form.userName, password: form.password }),
+});
     const data = await res.json();
 
     if (res.ok) {
       setIsLoggedIn(true);
-      steAttempts(0);
-      if(data.isAdmin){
-        Navigate("/admin")
+       setAttempts(0);
+          if (data.isAdmin) {
+      
+        navigate("/AdminPanel");
         return;
       }
-     
-      let profileData = await profileData.json();
-      setLoggedInUser(profileData.user)
-    }else{
-      steAttempts(prev => prev +1)
-      if(attempts+1 >=3){
-        setLockTime(Date.now());
-        alert("Too many failed attempts! Try again in 2 minutes");
-        return;
-      }
-      alert(data.error || "login failed")
+         const profileRes = await fetch("http://localhost:3000/user/getProfile", {
+      method: "GET",
+      credentials: "include",
+    });
+    const profileData = await profileRes.json();
+      setLoggedInUser(profileData.user);
+    }
+    else{
+        setAttempts(prev => prev + 1);
+        //0
+        //1
+        if(attempts+1 >=3){
+              setLockTime(Date.now());   
+      alert("Too many failed attempts! Try again in 2 minutes.");
+      return;
+        }
+      alert(data.error|| "login failed")
     }
   };
 
@@ -125,19 +140,13 @@ function Profile() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          {/* <div className="brand-panel">
-            <div className="brand-logo"><span className="dot" /> SHOP HERE</div>
-            <div className="brand-hero">Premium Streetwear · New Season Drop</div>
-            <div className="brand-sub small-muted">
-              Quality fabrics. Responsible stitching. Wear the story — curated for urban comfort.
-            </div>
-          </div> */}
+
 
           <div className="auth-panel">
             {loading ? (
               <>
                 <div className="small-muted">⏳ Creating your account...</div>
-                <div className="loader"></div>
+                <div className="loader"><i/></div>
               </>
             ) : (
               <>
@@ -245,7 +254,7 @@ function Profile() {
       <div className="welcome-card">
         <div className="picture-div">
           <FaUser />
-      <img src={loggedInUser.picture} alt="" className="picture"/>
+      <img src={loggedInUser?.picture} alt="" className="picture"/>
         <button className="edit-icon">
           <MdCameraEnhance />
         </button>
@@ -264,12 +273,12 @@ function Profile() {
 
 export default Profile;
 
+// themanishX2004  // theManihs@2004//
 
 
-
-
-
-
-
-
-
+//0
+//  useEffect(()=>{
+//   setCount(count+1)
+//   console.log(count);
+  
+//  })

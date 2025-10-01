@@ -1,50 +1,51 @@
-import cloudinary from "../config/Cloudinary.js";
 import products from "../Model/ProductsModel.js";
-import fs from "fs"; 
+import cloudinary from "../config/Cloudinary.js";
+import fs from "fs";
 
 export async function getproduct(req, res) {
-  try {
-    let product = await products.find();
-    res.json(product);
-  } catch (error) {
-    res.status(400).json({  
-      error: error,
-    });
-  }
+  try { res.json(await products.find()); }
+  catch (err) { res.status(500).json({ error: "Failed to fetch products" }); }
 }
+
+
 export async function addProduct(req, res) {
   try {
-    let imageUrl = [];
-
+    const imageUrls = [];
     if (req.files) {
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "uploads",
-        });
-
-        imageUrl.push(result.secure_url);
-        fs.unlinkSync(file.path); 
+        const result = await cloudinary.uploader.upload(file.path, { folder: "uploads" });
+        imageUrls.push(result.secure_url);
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
       }
     }
 
-    const newProduct = new products({ 
+    const newProduct = new products({
       productName: req.body.productName,
       productPrice: Number(req.body.productPrice),
       description: req.body.description,
       productCategory: req.body.productCategory,
-      productImage: imageUrl,
       productCount: Number(req.body.productCount),
+      productImage: imageUrls
     });
 
     await newProduct.save();
-
     res.status(201).json(newProduct);
-  } catch (err) {
-    console.log("Product add error:", err);
-    res.status(400).json({ error: err.message || "Failed to add product" });
-  }
+  } catch (err) { res.status(500).json({ error: "Failed to add product" }); }
 }
 
-export async function  updateProduct(req , res){
-    
+export async function updateProduct(req, res) {
+  try {
+    const updatedProduct = await products.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedProduct) return res.status(404).json({ error: "Product not found" });
+    res.json(updatedProduct);
+  } catch (err) { res.status(500).json({ error: "Failed to update product" }); }
+}
+
+
+export async function deleteProduct(req, res) {
+  try {
+    const deleted = await products.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Product not found" });
+    res.json({ message: "Product deleted" });
+  } catch (err) { res.status(500).json({ error: "Failed to delete product" }); }
 }

@@ -1,33 +1,12 @@
-import { Schema, Types } from "mongoose";
+import mongoose from "mongoose";
 
-let productsSchema = new Schema({
-    productName :{
-        types : String,
-        required : true,
-        unique : true,
-        trim : true
-    },
-    productImage:{
-        types:[String],
-        required : true
-    },
-    productCount :{
-        types : Number,
-        required: true,
-        min : 0
-    },
-    productCategory :{
-        types : Number,
-        required: true,
-        enum :["Men" , "Women" , "Kids"]
-    },
-    description :{
-        types : Number,
-        required: true,
-    }
-    
+const ProductSchema = new mongoose.Schema({
+  productName: { type: String, required: true },
+  productPrice: { type: Number, required: true },
+  description: { type: String },
+  productCategory: { type: String, enum: ["Men","Women","Kids"], default: "Men" },
+  productImage: { type: [String], default: [] },
+  productCount: { type: Number, default: 0 }
+}, { timestamps: true });
 
-})
-let products = mongoose.model("Product", productsSchema);
-
-export default products
+export default mongoose.model("Product", ProductSchema);

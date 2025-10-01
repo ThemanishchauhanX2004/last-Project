@@ -1,12 +1,12 @@
-import express from "express"
-import {getproduct , addProduct} from "../Controllers/Products"
-import upload from "../middleware/multer";
-import handleMulterError from "../middleware/multer/handleMulterError.js"
-import multer from "multer";
-let ProductRouter = express.Router()
+import express from "express";
+import { getproduct, addProduct, updateProduct, deleteProduct } from "../Controllers/Products.js";
+import upload, { handleMulterError } from "../middleware/multer.js";
 
-ProductRouter.get("/" , getproduct);
-ProductRouter.post("/add-product" , upload.array("image" , 2) , handleMulterError  , multer)
+const ProductRouter = express.Router();
 
+ProductRouter.get("/", getproduct);
+ProductRouter.post("/add-product", upload.array("image", 2), handleMulterError, addProduct);
+ProductRouter.patch("/update-product/:id", updateProduct);
+ProductRouter.delete("/delete-product/:id", deleteProduct);
 
-export default ProductRouter
+export default ProductRouter;

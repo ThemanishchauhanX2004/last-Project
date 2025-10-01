@@ -1,41 +1,26 @@
-import User from "../Model/UserModel"
-import bcrypt from "bcrypt"
-
 export default async function password(req, res, next) {
-    let {userName, password} = req.body
+  try {
+    const { userName, password } = req.body;
 
-    if(userName === process.env.admin_username){
-        if(password !== admin_password){
-            return res.json({
-                message:"invalid admin password",
-                isAdmin: true
-            })
-        }
-        return res.status(202).json({
-            message:"admin loggedin",
-            isAdmin:true
-        })
+    // Admin
+    if (userName === process.env.admin_username) {
+      if (password !== process.env.admin_password) {
+        return res.status(400).json({ message: "invalid admin password", isAdmin: true });
+      }
+      return res.status(202).json({ message: "admin logged in", isAdmin: true });
     }
 
-    let user = await User.findOne({userName})
+    // Normal user
+    let user = await User.findOne({ userName });
+    if (!user) return res.status(400).json({ message: "invalid credentials" });
 
-    if(!user){
-        throw new Error("invalid credentials")
-    }
+    let isVerified = await bcrypt.compare(password, user.password);
+    if (!isVerified) return res.status(400).json({ message: "invalid credentials" });
 
-    try {
-          let hashedPassword =user.password
-          let isVerified = await bcrypt.compare(password, hashedPassword)
-
-          if(isVerified){
-            req.body.user = user
-            next()
-          }
-          else{
-            throw new Error("invalid credentials")
-          }
-    } catch (error) {
-        throw new Error (`server error ${error.message} `)
-    }
-    
+    req.body.user = user;
+    next();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
 }

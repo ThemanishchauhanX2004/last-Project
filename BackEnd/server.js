@@ -4,6 +4,7 @@ import cors from "cors";
 import gatConnection from "./Database/db.js";
 import cookieParser from "cookie-parser";
 import userRouter from "./Routers/User.js";
+import ProductRouter from "./Routers/Products.js";
 
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 gatConnection();
 
 app.use("/user", userRouter);
+app.use("/product", ProductRouter);
 
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
