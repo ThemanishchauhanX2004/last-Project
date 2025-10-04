@@ -1,3 +1,5 @@
+import User from "../Model/UserModel";
+import bcrypt from "bcryptjs";
 export default async function password(req, res, next) {
   try {
     const { userName, password } = req.body;

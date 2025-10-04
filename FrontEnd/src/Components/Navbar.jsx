@@ -13,13 +13,17 @@ export default function Navbar(){
               <p>Shop Here</p>
            </div>
            <div className="certer">
+            
             <Link to="/shop">
               <button className={location.pathname==="/shop" ? "active" : ""}>Shop</button>
             </Link>
-            <Link to="/men">
+            <Link to="/men/men">
               <button className={location.pathname==="/men" ? "active" : ""}>Men</button>
             </Link>
-            <Link to="/kids">
+            <Link to="/woman.woman">
+              <button className={location.pathname==="/woman" ? "active" : ""}>Men</button>
+            </Link>
+            <Link to="/kids/kids">
               <button className={location.pathname==="/kids" ? "active" : ""}>Kids</button>
             </Link>
            </div>

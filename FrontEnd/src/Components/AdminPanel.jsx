@@ -11,7 +11,7 @@ function AdminPanel() {
     category: "Men",
   });
 
-  // ✅ Fetch products
+  
   const fetchProducts = async () => {
     try {
       const res = await fetch("http://localhost:3000/product"); // <-- fixed route
@@ -26,7 +26,7 @@ function AdminPanel() {
     fetchProducts();
   }, []);
 
-  // ✅ Add product
+  
   const handleAdd = async () => {
     if (!newProduct.image[0] && !newProduct.image[1]) {
       alert("Please select at least 1 image!");
@@ -61,7 +61,7 @@ function AdminPanel() {
     }
   };
 
-  // ✅ Update product
+  
   const handleUpdate = async (id, updatedProduct) => {
     try {
       const res = await fetch(`http://localhost:3000/product/update-product/${id}`, { // <-- fixed route
@@ -76,7 +76,7 @@ function AdminPanel() {
     }
   };
 
-  // ✅ Delete product
+  
   const handleDelete = async (id) => {
     try {
       const res = await fetch(`http://localhost:3000/product/delete-product/${id}`, { // <-- fixed route
@@ -89,7 +89,7 @@ function AdminPanel() {
     }
   };
 
-  // Handle input changes
+  
   const handleChange = (id, field, value) => {
     setProducts((prev) =>
       prev.map((p) => (p._id === id ? { ...p, [field]: value } : p))

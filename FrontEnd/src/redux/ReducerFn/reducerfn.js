@@ -2,11 +2,12 @@ import intialState from "../InitialState/intialState";
 
 export let reducerfn = (state=intialState, action)=>{
     switch(action.type){
-        case "product-added" : return {
+        case "set-user" : return {
             ...state,
-            cart:{
-                ...state.cart,
-                productCount : state.cart.productCount+1
+            user:{
+                id : action.payload.id,
+                name : action.payload.name,
+                userName : action.payload.userName,
             }
         }
         default : return state

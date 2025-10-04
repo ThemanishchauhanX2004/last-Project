@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import cloudinary from "../config/Cloudinary.js";
 
-// SIGNUP
+
 export async function signup(req, res) {
   try {
     let { firstName, lastName, userName, password } = req.body;
@@ -30,7 +30,7 @@ export async function signup(req, res) {
   }
 }
 
-// LOGIN
+
 
 
 export async function login(req, res) {
@@ -55,7 +55,6 @@ export async function login(req, res) {
 }
 
 
-// PROFILE
 export async function getProfile(req, res) {
   let token = req.cookies.token;
   if (!token) return res.status(401).json({ message: "Please login first to continue" });
