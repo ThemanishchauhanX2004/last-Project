@@ -9,7 +9,8 @@ let intialState = {
         id : null,
         name : "",
         userName :""
-    }
+    },
+    CatCount : 0
 };
 
 export default intialState

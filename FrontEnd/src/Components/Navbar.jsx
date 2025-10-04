@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import {Link ,useLocation} from "react-router-dom"
 import  {TiShoppingCart}from "react-icons/ti"
 import {CgProfile} from "react-icons/cg"
@@ -6,7 +6,9 @@ import "./Navbar.css"
 
 export default function Navbar(){
     let location = useLocation()
+    let dispatch = useDispatch()
     let cartCount = useSelector(state=>state.cart.productCount)
+    state=>(state.cart?.product || []).reduce((sum , p)=>sum+(p.qty || 1),0)
     return(  
         <div className="navbar-container">
            <div className="left">
