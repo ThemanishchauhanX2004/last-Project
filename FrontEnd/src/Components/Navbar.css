@@ -23,10 +23,13 @@
  .left{
     font-weight: 600;
  }
- .center{
-    width: 45%;
+ .center {
+    display: flex;
+    gap: 15px; 
+    width: 100%; 
+    align-items: center; 
+}
 
- }
  .right{
     width: 10%;
   

@@ -1,9 +1,9 @@
 import express from "express"
-import authMiddleware from "../middleware/authMiddleware"
-import{addToCart , getCart} from "../Controllers/Cart"
-let cartRouter = express.Router
+import authMiddleware from "../middleware/passwordVrification.js"
+import{addToCart , getCart} from "../Controllers/Cart.js"
+let cartRouter = express.Router()
 
 cartRouter.post("/add" , authMiddleware , addToCart)
-cartRouter.length("/get" , authMiddleware , getCart)
+cartRouter.get("/get" , authMiddleware , getCart)
 
-export default cartRouter;
+export default cartRouter

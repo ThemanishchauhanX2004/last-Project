@@ -82,46 +82,65 @@ const [lockTime, setLockTime] = useState(null);
     }
   };
 
-  const handleLogin = async () => {
-     if (lockTime && Date.now() - lockTime < 2 * 60 * 1000) {
+ const handleLogin = async () => {
+  // Lockout check (2 minutes)
+  if (lockTime && Date.now() - lockTime < 2 * 60 * 1000) {
     alert("Too many failed attempts. Please try again after 2 minutes.");
     return;
   }
-    const res = await fetch("http://localhost:3000/user/login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include",
-  body: JSON.stringify({ userName: form.userName, password: form.password }),
-});
+
+  try {
+    const res = await fetch("http://localhost:5000/user/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // send cookie
+      body: JSON.stringify({ userName: form.userName, password: form.password }),
+    });
+
     const data = await res.json();
 
     if (res.ok) {
       setIsLoggedIn(true);
-       setAttempts(0);
-          if (data.isAdmin) {
-      
+      setAttempts(0);
+
+      // Admin login
+      if (data.isAdmin) {
         navigate("/AdminPanel");
         return;
       }
-         const profileRes = await fetch("http://localhost:3000/user/getProfile", {
-      method: "GET",
-      credentials: "include",
-    });
-    const profileData = await profileRes.json();
-      setLoggedInUser(profileData.user);
+
+      // Normal user: get profile
+      const profileRes = await fetch("http://localhost:5000/user/getProfile", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const profileData = await profileRes.json();
+      if (profileRes.ok) {
+        setLoggedInUser(profileData.user);
+      } else {
+        alert(profileData.message || "Failed to fetch profile");
+      }
+    } else {
+      // Login failed
+      setAttempts(prev => prev + 1);
+
+      // Lock user after 3 failed attempts
+      if (attempts + 1 >= 3) {
+        setLockTime(Date.now());
+        alert("Too many failed attempts! Try again in 2 minutes.");
+        return;
+      }
+
+      alert(data.message || "Login failed");
     }
-    else{
-        setAttempts(prev => prev + 1);
-        //0
-        //1
-        if(attempts+1 >=3){
-              setLockTime(Date.now());   
-      alert("Too many failed attempts! Try again in 2 minutes.");
-      return;
-        }
-      alert(data.error|| "login failed")
-    }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Server error. Please try again later.");
+  }
+};
+
+
 
   const handleLogout = async () => {
     const res = await fetch("http://localhost:3000/user/logout", {
