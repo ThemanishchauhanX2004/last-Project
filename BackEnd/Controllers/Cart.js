@@ -1,125 +1,162 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import Cart from "../Model/Cart.js"
+import Product from "../Model/ProductsModel.js"
 
-export default function Cart() {
-  const dispatch = useDispatch();
-  const cart = useSelector((state) => state.cart);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [updatingId, setUpdatingId] = useState(null);
 
-  useEffect(() => {
-    const fetchCart = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("http://localhost:3000/cart/get", {
-          method: "GET",
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (data.cart) dispatch({ type: "set-cart", payload: data.cart });
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCart();
-  }, []);
+export const addToCart = async (req, res) => {
+  const userId = req.user?._id;
+  const { productId, price, shipping } = req.body;
 
-  if (loading) return <p>Loading cart...</p>;
-
-  async function updateQuantity(productId, action) {
-    if (updating) return;
-    setUpdating(true);
-
-    try {
-      const res = await fetch("http://localhost:3000/cart/update", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, action }),
-      });
-
-      const data = await res.json();
-
-      if (data.cart) {
-        dispatch({ type: "set-cart", payload: data.cart });
-      } else if (data.error) {
-        alert(data.error);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setUpdating(false);
-    }
+  if (!userId || !productId) {
+    return res.status(400).json({ error: "Missing userId or productId" });
   }
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>Your Cart</h2>
-      {cart.products.length > 0 ? (
-        cart.products.map((p, idx) => (
-          <div
-            key={idx}
-            style={{
-              border: "1px solid #ccc",
-              marginBottom: 10,
-              padding: 10,
-              borderRadius: 8,
-            }}
-          >
-            <h3>{p.item.productName}</h3>
-            <p>Price: ₹{p.price}</p>
+  try {
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              {/* ✅ Increment Button */}
-              <button
-                disabled={updatingId === p.item._id || p.item.productCount <= 0}
-                // 5
-                //5 +
-                onClick={async () => {
-                  setUpdatingId(p.item._id);
-                  await updateQuantity(p.item._id, "inc");
-                  setUpdatingId(null);
-                }}
-              >
-                +
-              </button>
+    const productDoc = await Product.findById(productId);
+    if (!productDoc) {
+      return res.status(404).json({ error: "Product not found" });
+    }
 
-              <p>Qty: {p.qty}</p>
+  
+    if (productDoc.productCount <= 0) {
+      return res.status(400).json({ error: "Product is out of stock" });
+    }
 
-              {/* ✅ Decrement Button with Confirmation */}
-              <button
-                disabled={updating}
-                onClick={async () => {
-                  if (p.qty === 1) {
-                    const confirmRemove = window.confirm(
-                      "This product will be removed completely. Are you sure?"
-                    );
-                    if (!confirmRemove) return; // user canceled
-                  }
-                  setUpdatingId(p.item._id);
-                  await updateQuantity(p.item._id, "dec");
-                  setUpdatingId(null);
-                }}
-              >
-                -
-              </button>
 
-              <p>Available: {p.item.productCount}</p>
-            </div>
+    let cart = await Cart.findOne({ userId });
+    if (!cart) {
+      cart = new Cart({
+        userId,
+        products: [],
+        totalPrice: 0,
+        totalShipping: 0,
+      });
+    }
 
-            <p>Subtotal: ₹{p.price * (p.qty || 1)}</p>
-          </div>
-        ))
-      ) : (
-        <p>Your cart is empty.</p>
-      )}
+    const existingProduct = cart.products.find(
+      (p) => p.item.toString() === productId
+    );
 
-      <h3>Total Price: ₹{cart.totalPrice}
-      <h3>Total Shipping: ₹{cart.totalShipping}</h3>
-      </h3><h2>Total: ₹{cart.totalPrice + cart.totalShipping}</h2>
-    </div>
-  );
-}
+
+    if (existingProduct) {
+      if (existingProduct.qty + 1 > productDoc.productCount) {
+        return res
+          .status(400)
+          .json({ error: "Not enough stock available to add more" });
+      }
+      existingProduct.qty += 1;
+    } else {
+
+      cart.products.push({
+        item: productId,
+        price,
+        shipping,
+        qty: 1,
+      });
+    }
+
+
+    cart.totalPrice = cart.products.reduce(
+      (sum, p) => sum + p.price * p.qty,
+      0
+    );
+    cart.totalShipping = cart.products.reduce(
+      (sum, p) => sum + p.shipping,
+      0
+    );
+
+
+    await cart.save();
+
+  
+    productDoc.productCount -= 1;
+    await productDoc.save();
+
+    res.status(200).json({ message: "Product added to cart", cart });
+  } catch (err) {
+    console.error("❌ Error in addToCart:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+export const getCart = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
+
+    let cart = await Cart.findOne({ userId }).populate("products.item");
+    // populate - > id ??? - document 
+
+     // products  
+ 
+    console.log(cart);
+    
+    if (!cart)
+      cart = { userId, products: [], totalPrice: 0, totalShipping: 0 };
+    else cart = cart.toObject();
+
+    res.status(200).json({ cart });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch cart" });
+  }
+};
+
+export const updateCart = async (req, res) => {
+  const userId = req.user?._id;
+  const { productId, action } = req.body;
+
+  if (!userId || !productId || !action) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) return res.status(404).json({ error: "Cart not found" });
+
+    const productInCart = cart.products.find(p => p.item.toString() === productId);
+    if (!productInCart) return res.status(404).json({ error: "Product not in cart" });
+
+    const productDoc = await Product.findById(productId);
+    if (!productDoc) return res.status(404).json({ error: "Product not found" });
+
+    const stock = productDoc.productCount ?? 0;
+
+    if (action === "inc") {
+    
+      if (stock<=0) {
+        return res.status(400).json({ error: "Stock limit reached" });
+      }
+      productInCart.qty += 1;
+      productDoc.productCount -= 1;
+    } else if (action === "dec") {
+      productInCart.qty -= 1;
+      productDoc.productCount += 1;
+
+
+      if (productInCart.qty <= 0) {
+        cart.products = cart.products.filter(p => p.item.toString() !== productId);
+      }
+    } else {
+      return res.status(400).json({ error: "Invalid action" });
+    }
+
+    cart.totalPrice = cart.products.reduce((sum, p) => sum + p.price * p.qty, 0);
+    cart.totalShipping = cart.products.reduce((sum, p) => sum + p.shipping, 0);
+
+
+    await cart.save();
+    await productDoc.save();
+
+    const updatedCart = await Cart.findOne({ userId }).populate("products.item");
+
+    res.status(200).json({
+      message: "Cart updated successfully",
+      cart: updatedCart
+    });
+  } catch (err) {
+    console.error("❌ Error in updateCart:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
