@@ -22,7 +22,7 @@ export default function Navbar(){
             <Link to="/men/men">
               <button className={location.pathname==="/men" ? "active" : ""}>Men</button>
             </Link>
-            <Link to="/woman.woman">
+            <Link to="/woman/woman">
               <button className={location.pathname==="/woman" ? "active" : ""}>woman</button>
             </Link>
             <Link to="/kids/kids">

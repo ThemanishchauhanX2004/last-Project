@@ -5,6 +5,7 @@ import { Route, Routes } from 'react-router-dom'
 import AdminPanel from "./Components/AdminPanel"
 import ShopCategroy from './Components/ShopCategroy'
 import ContextProvider from './Context/ContextProvider'
+import Cart from './Components/Cart'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/AdminPanel" element={<AdminPanel/>}/>
         <Route path="/Profile" element={<Profile/>}/>
         <Route path='/shop/:category' element={<ShopCategroy/>}/>
+        <Route path='/Cart' element={<Cart/>}/>
       </Routes>
       </ContextProvider>
     </div>
@@ -22,3 +24,5 @@ function App() {
 }
 
 export default App
+// Deepaksingh123456@
+//  deepakb21200
